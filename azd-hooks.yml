@@ -42,12 +42,6 @@ jobs:
             ./install-azd.ps1 -Version 'daily'
             echo "------------"
 
-            azd version
-
-            azd config set auth.useAzCliAuth "true"
-            azd config set defaults.subscription ${{ parameters.subscriptionId }}
-            azd config set defaults.location ${{ parameters.location }}
-
 
 
 
@@ -67,6 +61,11 @@ jobs:
             #  mkdir -p $(templatePath)
 
             #  pushd $(templatePath)
+            azd version
+
+            azd config set auth.useAzCliAuth "true"
+            azd config set defaults.subscription ${{ parameters.subscriptionId }}
+            azd config set defaults.location ${{ parameters.location }}
 
             environmentName="sdkazdhook$(uuidgen | cut -c 1-6)"
             azd init -e $environmentName
