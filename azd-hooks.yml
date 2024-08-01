@@ -33,12 +33,13 @@ jobs:
 
 
             # 可能会要求输入密码 sudo
-            powershell -ex AllSigned -c "Invoke-RestMethod 'https://aka.ms/install-azd.ps1' -OutFile 'install-azd.ps1'; ./install-azd.ps1 -Version 'daily'"
+            powershell -ex AllSigned -c "Invoke-RestMethod 'https://aka.ms/install-azd.ps1' -OutFile 'install-azd.ps1';"
 
             # test 
             ls
             .\a.ps1
             ./a.ps1
+            ./install-azd.ps1 -Version 'daily'
             echo "------------"
 
             azd version
@@ -48,6 +49,14 @@ jobs:
             azd config set defaults.location ${{ parameters.location }}
 
 
+
+
+      - task: PowerShell@2
+        inputs:
+          targetType: 'filePath'
+          filePath: 'install-azd.ps1 -Version "daily"'
+          arguments: > # Use this to avoid newline characters in multiline string
+            -Version 'daily'
 
       - task: Bash@3
         displayName: Install template
