@@ -1,0 +1,109 @@
+name: Run azd hooks
+trigger: none
+
+pool:
+  vmImage: windows-latest
+
+parameters:
+  - name: subscriptionId
+    displayName: subscription id
+    type: string
+    # test 生产环境下删除
+    default: "faa080af-c1d8-40ad-9cce-e1a450ca5b57"
+  - name: location
+    displayName: location
+    type: string
+    default: "eastus2"
+
+
+variables:
+  - name: templatePath
+    value: template
+  - name: ScriptPath
+    value: script
+
+jobs:
+  - job: RunHooks
+    steps:
+      - task: PowerShell@2
+        displayName: Install azd
+        inputs:
+          targetType: inline
+          script: |
+
+            # test 
+            ls
+            echo "------------"
+
+            # 可能会要求输入密码 sudo
+            powershell -ex AllSigned -c "Invoke-RestMethod 'https://aka.ms/install-azd.ps1' -OutFile 'install-azd.ps1'; ./install-azd.ps1 -Version 'daily'"
+
+            azd version
+
+            azd config set auth.useAzCliAuth "true"
+            azd config set defaults.subscription ${{ parameters.subscriptionId }}
+            azd config set defaults.location ${{ parameters.location }}
+
+
+
+      - task: Bash@3
+        displayName: Install template
+        inputs:
+          targetType: inline
+          script: |
+
+            #  mkdir -p $(templatePath)
+
+            #  pushd $(templatePath)
+
+            environmentName="sdkazdhook$(uuidgen | cut -c 1-6)"
+            azd init -e $environmentName
+
+            # popd
+
+      # - task: Bash@3
+      #   displayName: Replace azure.yaml file
+      #   inputs:
+      #     targetType: inline
+      #     script: |
+
+      #       yamlFile=$(cat $(ScriptPath)/azure.yaml)
+      #       psFile=$(cat $(ScriptPath)/1.ps1)
+      #       shFile=$(cat $(ScriptPath)/1.sh)
+
+      #       pushd $(templatePath)
+
+
+      #       # azure.yaml
+      #       echo $yamlFile > azure.yaml
+
+      #       # hooks file
+      #       mkdir -p hooks
+      #       pushd hooks
+      #       echo $psFile > 1.ps1
+      #       echo $shFile > 1.sh
+
+      #       popd
+      #       popd
+
+      - task: AzureCLI@2
+        displayName: Run azd hooks
+        inputs:
+          azureSubscription: tomServiceConnection1
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+
+            # test
+            # pushd $(templatePath)
+
+            azd up --no-prompt
+            
+            # test
+            # azd package 
+            # azd restore
+
+            azd down --purge --force
+
+
+           # popd
